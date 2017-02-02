@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>Basic Blog</title>
+	</head>
+
+	<style>
+		.blog_post {
+			padding: 10px;
+		}
+		.comment {
+			padding: 10px;
+		}
+	</style>
+
+	<body>
+		<h1>My Blog</h1>
+
+		<div class="blog_post">
+			<div>{{post.subject}}</div>
+			<div>by {{post.writer}}</div>
+			<div>{{post.content}}</div>
+			<div><a href="/blog/delete/{{ post.key().id() }}">Delete</a></div>
+		</div>
+		<h4>Comments</h4>
+		<form method="post">
+			<label>
+				<div>Add comment</div>
+				<textarea name="comment"></textarea>
+			</label>
+
+			<input type="submit">
+		</form>
+		{% for comment in my_comments %}
+			<div class="comment">
+				<div><b>{{comment.writer}}</b></div>
+				<div>{{comment.comment}}</div>			
+			</div>
+		{% endfor %}
+	</body>
+</html>
