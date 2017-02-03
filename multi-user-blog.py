@@ -108,6 +108,22 @@ class NewPost(Handler):
 		else:
                         self.redirect("/blog/login")
 
+# For editing posts
+class EditPost(Handler):
+        def get(self, blog_id):
+                my_blog = Blogpost.get_by_id(int(blog_id))
+                self.render("edit.html", post=my_blog)
+        def post(self, blog_id):
+                my_blog = Blogpost.get_by_id(int(blog_id))
+                
+                new_subject = self.request.get("subject")
+                new_content = self.request.get("content")
+                
+                my_blog.subject = new_subject
+                my_blog.content = new_content
+                my_blog.put()
+
+                self.redirect("/blog/%s" % blog_id)
 
 # Permalink to blog posts
 class Permalink(Handler):
@@ -284,6 +300,7 @@ app = webapp2.WSGIApplication([('/blog', MainPage),
                                ('/blog/newpost', NewPost),
                                ('/blog/(\d+)', Permalink),
                                ('/blog/delete/(\d+)', Delete),
+                               ('/blog/edit/(\d+)', EditPost),
                                ('/blog/signup', Signup),
                                ('/blog/login', Login),
                                ('/blog/welcome', Welcome),

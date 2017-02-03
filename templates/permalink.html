@@ -21,6 +21,7 @@
 			<div>{{post.subject}}</div>
 			<div>by {{post.writer}}</div>
 			<div>{{post.content}}</div>
+			<div><a href="/blog/edit/{{ post.key().id() }}">Edit</a></div>
 			<div><a href="/blog/delete/{{ post.key().id() }}">Delete</a></div>
 		</div>
 		<h4>Comments</h4>
