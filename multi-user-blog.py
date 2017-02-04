@@ -136,8 +136,11 @@ class EditPost(Handler):
 class Permalink(Handler):
 	def get(self, blog_id):
 		my_blog = Blogpost.get_by_id(int(blog_id))
-		my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
-		self.render("permalink.html", post=my_blog, my_comments=my_comments)
+		if my_blog:
+                        my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
+                        self.render("permalink.html", post=my_blog, my_comments=my_comments)
+                else:
+                        self.response.out.write("Ooops! Page does not exist!")
 
         def post(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
