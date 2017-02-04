@@ -45,9 +45,10 @@ def make_secure_val(val):
 	return '%s|%s' % (val, hashlib.sha256(secret + val).hexdigest())
 
 def check_secure_val(secure_val):
-	val = secure_val.split('|')[0]
-	if secure_val == make_secure_val(val):
-		return val
+        if secure_val:
+                val = secure_val.split('|')[0]
+                if secure_val == make_secure_val(val):
+                        return val
 
 # Base Handler class
 class Handler(webapp2.RequestHandler):
@@ -115,13 +116,19 @@ class EditPost(Handler):
                 self.render("edit.html", post=my_blog)
         def post(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
-                
-                new_subject = self.request.get("subject")
-                new_content = self.request.get("content")
-                
-                my_blog.subject = new_subject
-                my_blog.content = new_content
-                my_blog.put()
+
+                user_cookie = self.request.cookies.get("user_id")
+		if check_secure_val(user_cookie):
+                        user_id = user_cookie.split('|')[0]
+			username = User.by_id(int(user_id)).name
+			
+			if username == my_blog.writer:
+                                new_subject = self.request.get("subject")
+                                new_content = self.request.get("content")
+                                
+                                my_blog.subject = new_subject
+                                my_blog.content = new_content
+                                my_blog.put()
 
                 self.redirect("/blog/%s" % blog_id)
 
@@ -155,10 +162,18 @@ class Permalink(Handler):
 class Delete(Handler):
 	def get(self, blog_id):
 		my_blog = Blogpost.get_by_id(int(blog_id))
-		my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
-		db.delete(my_blog)
-		db.delete(my_comments)
-		self.redirect("/blog")
+		
+		user_cookie = self.request.cookies.get("user_id")
+		if check_secure_val(user_cookie):
+                        user_id = user_cookie.split('|')[0]
+			username = User.by_id(int(user_id)).name
+			
+			if username == my_blog.writer:
+                                my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
+                                db.delete(my_blog)
+                                db.delete(my_comments)
+
+                self.redirect("/blog")
       
 
 # Signup page
