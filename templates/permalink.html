@@ -25,6 +25,9 @@
 			<div><a href="/blog/like/{{ post.key().id() }}">Like</a></div>
 			<div><a href="/blog/edit/{{ post.key().id() }}">Edit</a></div>
 			<div><a href="/blog/delete/{{ post.key().id() }}">Delete</a></div>
+			{% for liker in post.likers %}
+				<div>{{liker}}</div>
+			{% endfor %}
 		</div>
 		<h4>Comments</h4>
 		<form method="post">

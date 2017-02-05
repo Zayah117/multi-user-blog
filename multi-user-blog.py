@@ -111,7 +111,7 @@ class NewPost(Handler):
                         content = self.request.get("content")
 			writer = username
 			if subject and content:
-                                p = Blogpost(subject = subject, content = content, writer = writer, likes = 0)
+                                p = Blogpost(subject = subject, content = content, writer = writer, likes = 0, likers = [])
                                 p.put()
 
                                 self.redirect("/blog/%s" % p.key().id())
@@ -179,8 +179,9 @@ class LikePost(Handler):
                 my_blog = Blogpost.get_by_id(int(blog_id))
 
 		user = get_user(self)
-		if user:
+		if user and user.name not in my_blog.likers and user.name != my_blog.writer:
 			my_blog.likes += 1
+			my_blog.likers.append(user.name)
 			my_blog.put()
 
                 self.redirect("/blog/" + blog_id)
@@ -286,6 +287,7 @@ class Blogpost(db.Model):
 	created = db.DateTimeProperty(auto_now_add = True)
 	writer = db.StringProperty(required = True)
 	likes = db.IntegerProperty(required = True)
+	likers = db.StringListProperty(required = True)
 
 # Comment model
 class Comment(db.Model):
