@@ -100,7 +100,7 @@ class NewPost(Handler):
                         content = self.request.get("content")
 			writer = username
 			if subject and content:
-                                p = Blogpost(subject = subject, content = content, writer = writer)
+                                p = Blogpost(subject = subject, content = content, writer = writer, likes = 0)
                                 p.put()
 
                                 self.redirect("/blog/%s" % p.key().id())
@@ -161,8 +161,23 @@ class Permalink(Handler):
 
                 self.render("permalink.html", post=my_blog, my_comments=my_comments)
 
+# For liking posts
+class LikePost(Handler):
+        def get(self, blog_id):
+                my_blog = Blogpost.get_by_id(int(blog_id))
+
+		user_cookie = self.request.cookies.get("user_id")
+		if check_secure_val(user_cookie):
+                        user_id = user_cookie.split('|')[0]
+			user = User.by_id(int(user_id))
+
+			my_blog.likes += 1
+			my_blog.put()
+
+                self.redirect("/blog/" + blog_id)
+
 # For deleting posts
-class Delete(Handler):
+class DeletePost(Handler):
 	def get(self, blog_id):
 		my_blog = Blogpost.get_by_id(int(blog_id))
 		
@@ -268,6 +283,7 @@ class Blogpost(db.Model):
 	content = db.TextProperty(required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
 	writer = db.StringProperty(required = True)
+	likes = db.IntegerProperty(required = True)
 
 # Comment model
 class Comment(db.Model):
@@ -317,8 +333,9 @@ class User(db.Model):
 app = webapp2.WSGIApplication([('/blog', MainPage),
                                ('/blog/newpost', NewPost),
                                ('/blog/(\d+)', Permalink),
-                               ('/blog/delete/(\d+)', Delete),
+                               ('/blog/delete/(\d+)', DeletePost),
                                ('/blog/edit/(\d+)', EditPost),
+                               ('/blog/like/(\d+)', LikePost),
                                ('/blog/signup', Signup),
                                ('/blog/login', Login),
                                ('/blog/welcome', Welcome),

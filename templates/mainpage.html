@@ -21,6 +21,7 @@
 				<div>{{post.subject}}</div>
 				<div>{{post.content}}</div>
 				<div>Submitted by {{post.writer}}</div>
+				<div>Likes: {{post.likes}}</div>
 				<div><a href="/blog/{{ post.key().id() }}">Permalink</a></div>
 			</div>
 		{% endfor %}
