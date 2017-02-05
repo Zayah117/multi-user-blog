@@ -50,6 +50,20 @@ def check_secure_val(secure_val):
                 if secure_val == make_secure_val(val):
                         return val
 
+def get_user(self):
+        user_cookie = self.request.cookies.get("user_id")
+        if check_secure_val(user_cookie):
+                user_id = user_cookie.split('|')[0]
+                user = User.by_id(int(user_id))
+                return user
+
+def get_username(self):
+        user_cookie = self.request.cookies.get("user_id")
+        if check_secure_val(user_cookie):
+                user_id = user_cookie.split('|')[0]
+                user = User.by_id(int(user_id))
+                return user.name
+
 # Base Handler class
 class Handler(webapp2.RequestHandler):
 	def write(self, *a, **kw):
@@ -91,11 +105,8 @@ class NewPost(Handler):
 		self.render("newpost.html")
 
 	def post(self):
-		user_cookie = self.request.cookies.get("user_id")
-		if check_secure_val(user_cookie):
-			user_id = user_cookie.split('|')[0]
-			username = User.by_id(int(user_id)).name
-
+		username = get_username(self)
+		if username:
                         subject = self.request.get("subject")
                         content = self.request.get("content")
 			writer = username
@@ -113,24 +124,28 @@ class NewPost(Handler):
 class EditPost(Handler):
         def get(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
-                self.render("edit.html", post=my_blog)
+
+                username = get_username(self)
+                if username == my_blog.writer:
+                        self.render("edit.html", post=my_blog)
+                else:
+                        self.redirect("/blog/%s" % blog_id)
+
         def post(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
 
-                user_cookie = self.request.cookies.get("user_id")
-		if check_secure_val(user_cookie):
-                        user_id = user_cookie.split('|')[0]
-			username = User.by_id(int(user_id)).name
-			
-			if username == my_blog.writer:
-                                new_subject = self.request.get("subject")
-                                new_content = self.request.get("content")
-                                
-                                my_blog.subject = new_subject
-                                my_blog.content = new_content
-                                my_blog.put()
+                username = get_username(self)
+                if username and username == my_blog.writer:
+                        new_subject = self.request.get("subject")
+                        new_content = self.request.get("content")
+                        
+                        my_blog.subject = new_subject
+                        my_blog.content = new_content
+                        my_blog.put()
 
-                self.redirect("/blog/%s" % blog_id)
+                        self.redirect("/blog/%s" % blog_id)
+                else:
+                        self.redirect("/blog/login")
 
 # Permalink to blog posts
 class Permalink(Handler):
@@ -142,16 +157,13 @@ class Permalink(Handler):
                 else:
                         self.response.out.write("Ooops! Page does not exist!")
 
+        # For commenting on posts
         def post(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
                 comment_text = self.request.get("comment")
                 if comment_text:
-                        user_cookie = self.request.cookies.get("user_id")
-                        
-                        if check_secure_val(user_cookie):
-                                user_id = user_cookie.split('|')[0]
-                                username = User.by_id(int(user_id)).name
-                                
+                        username = get_username(self)
+                        if username:
                                 c = Comment(writer = username, comment = comment_text, post = my_blog)
                                 c.put()
                         else:
@@ -166,11 +178,8 @@ class LikePost(Handler):
         def get(self, blog_id):
                 my_blog = Blogpost.get_by_id(int(blog_id))
 
-		user_cookie = self.request.cookies.get("user_id")
-		if check_secure_val(user_cookie):
-                        user_id = user_cookie.split('|')[0]
-			user = User.by_id(int(user_id))
-
+		user = get_user(self)
+		if user:
 			my_blog.likes += 1
 			my_blog.put()
 
@@ -180,16 +189,11 @@ class LikePost(Handler):
 class DeletePost(Handler):
 	def get(self, blog_id):
 		my_blog = Blogpost.get_by_id(int(blog_id))
-		
-		user_cookie = self.request.cookies.get("user_id")
-		if check_secure_val(user_cookie):
-                        user_id = user_cookie.split('|')[0]
-			username = User.by_id(int(user_id)).name
-			
-			if username == my_blog.writer:
-                                my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
-                                db.delete(my_blog)
-                                db.delete(my_comments)
+		username = get_username(self)
+		if username and username == my_blog.writer:
+                        my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
+                        db.delete(my_blog)
+                        db.delete(my_comments)
 
                 self.redirect("/blog")
       
@@ -269,10 +273,8 @@ class Logout(Handler):
 # Welcome page
 class Welcome(Handler):
 	def get(self):
-		user_cookie = self.request.cookies.get("user_id")
-		if check_secure_val(user_cookie):
-			user_id = user_cookie.split('|')[0]
-			username = User.by_id(int(user_id)).name
+		username = get_username(self)
+		if username:
 			self.render('welcome.html', username = username)
 		else:
 			self.redirect('/blog/signup')
