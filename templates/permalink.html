@@ -41,7 +41,8 @@
 		{% for comment in my_comments %}
 			<div class="comment">
 				<div><b>{{comment.writer}}</b></div>
-				<div>{{comment.comment}}</div>			
+				<div>{{comment.comment}}</div>		
+				<div><a href="/blog/editcomment/{{ comment.key().id() }}">Edit</a></div>	
 			</div>
 		{% endfor %}
 	</body>

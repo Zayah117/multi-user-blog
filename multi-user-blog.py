@@ -197,6 +197,20 @@ class DeletePost(Handler):
                         db.delete(my_comments)
 
                 self.redirect("/blog")
+
+# Deleting and editing comments
+class EditComment(Handler):
+        def get(self, comment_id):
+                my_comment = Comment.get_by_id(int(comment_id))
+                self.render("editcomment.html", comment=my_comment)
+                
+        def post(self, comment_id):
+                my_comment = Comment.get_by_id(int(comment_id))
+                new_comment = self.request.get("comment")
+                my_comment.comment = new_comment
+                my_comment.put()
+                
+                self.redirect("/blog")
       
 
 # Signup page
@@ -340,6 +354,7 @@ app = webapp2.WSGIApplication([('/blog', MainPage),
                                ('/blog/delete/(\d+)', DeletePost),
                                ('/blog/edit/(\d+)', EditPost),
                                ('/blog/like/(\d+)', LikePost),
+                               ('/blog/editcomment/(\d+)', EditComment),
                                ('/blog/signup', Signup),
                                ('/blog/login', Login),
                                ('/blog/welcome', Welcome),
