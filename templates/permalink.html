@@ -16,18 +16,18 @@
 
 	<body>
 		<h1>My Blog</h1>
+		<a href="/blog">Back</a>
 
 		<div class="blog_post">
 			<div>{{post.subject}}</div>
 			<div>by {{post.writer}}</div>
 			<div>{{post.content}}</div>
 			<div>Likes: {{post.likes}}</div>
-			<div><a href="/blog/like/{{ post.key().id() }}">Like</a></div>
-			<div><a href="/blog/edit/{{ post.key().id() }}">Edit</a></div>
-			<div><a href="/blog/delete/{{ post.key().id() }}">Delete</a></div>
-			{% for liker in post.likers %}
-				<div>{{liker}}</div>
-			{% endfor %}
+			<div>
+				<a href="/blog/like/{{ post.key().id() }}">Like</a>
+				<a href="/blog/edit/{{ post.key().id() }}">Edit</a>
+				<a href="/blog/delete/{{ post.key().id() }}">Delete</a>
+			</div>
 		</div>
 		<h4>Comments</h4>
 		<form method="post">
@@ -41,8 +41,13 @@
 		{% for comment in my_comments %}
 			<div class="comment">
 				<div><b>{{comment.writer}}</b></div>
-				<div>{{comment.comment}}</div>		
-				<div><a href="/blog/editcomment/{{ comment.key().id() }}">Edit</a></div>	
+				<div>{{comment.comment}}</div>
+				<div>Likes: {{comment.likes}}</div>
+				<div>
+					<a href="/blog/{{ post.key().id() }}/like/{{ comment.key().id() }}">Like</a>
+					<a href="/blog/{{ post.key().id() }}/{{ comment.key().id() }}">Edit</a>
+					<a href="/blog/{{ post.key().id() }}/delete/{{ comment.key().id() }}">Delete</a>
+				</div>
 			</div>
 		{% endfor %}
 	</body>
