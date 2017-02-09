@@ -5,11 +5,12 @@ import string
 import hashlib
 import jinja2
 import webapp2
-
 from google.appengine.ext import db
+
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+
 
 def clear_database():
     """
@@ -24,16 +25,20 @@ def clear_database():
     db.delete(my_posts)
     db.delete(my_comments)
 
+
 # Validating user inputs
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
+
 def valid_username(username):
     return USER_RE.match(username)
 
+
 def valid_password(password):
     return PASS_RE.match(password)
+
 
 def valid_email(email):
     if email == "":
@@ -41,18 +46,22 @@ def valid_email(email):
     else:
         return EMAIL_RE.match(email)
 
+
 secret = "Tabs>Spaces"
+
 
 # Security functions
 def make_secure_val(val):
     """Make secure hash"""
     return '%s|%s' % (val, hashlib.sha256(secret + val).hexdigest())
 
+
 def check_secure_val(secure_val):
     if secure_val:
         val = secure_val.split('|')[0]
         if secure_val == make_secure_val(val):
             return val
+
 
 def get_user(self):
     """Get current user by cookie"""
@@ -62,9 +71,11 @@ def get_user(self):
         user = User.by_id(int(user_id))
         return user
 
+
 def get_username(self):
     """Get current username by cookie"""
     get_user(self).name
+
 
 class Handler(webapp2.RequestHandler):
     """Base Handler class"""
@@ -94,6 +105,7 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
+
 class MainPage(Handler):
     """Main page"""
     def get(self):
@@ -104,6 +116,7 @@ class MainPage(Handler):
             logged_in = True
 
         self.render("mainpage.html", blog_posts=blog_posts, logged_in=logged_in)
+
 
 class NewPost(Handler):
     """New post page"""
@@ -125,6 +138,7 @@ class NewPost(Handler):
                 self.render("newpost.html")
         else:
             self.redirect("/blog/login")
+
 
 class EditPost(Handler):
     """Edit post page"""
@@ -154,6 +168,7 @@ class EditPost(Handler):
             self.redirect("/blog/%s" % blog_id)
         else:
             self.redirect("/blog/login")
+
 
 class Permalink(Handler):
     """
@@ -187,6 +202,7 @@ class Permalink(Handler):
 
         self.render("permalink.html", post=my_blog, my_comments=my_comments)
 
+
 class LikePost(Handler):
     """Handler for liking posts"""
     def get(self, blog_id):
@@ -204,6 +220,7 @@ class LikePost(Handler):
 
         else:
             self.redirect("/blog/" + blog_id)
+
 
 
 class DeletePost(Handler):
@@ -225,9 +242,7 @@ class DeletePost(Handler):
             self.redirect("/blog/" + blog_id)
 
 
-
 # Deleting/Editing/Liking comments
-
 class EditComment(Handler):
     """Edit comment page"""
     def get(self, blog_id, comment_id):
@@ -247,6 +262,7 @@ class EditComment(Handler):
 
         self.redirect("/blog/" + blog_id)
 
+
 class DeleteComment(Handler):
     """Handler for deleting comment"""
     def get(self, blog_id, comment_id):
@@ -255,6 +271,7 @@ class DeleteComment(Handler):
             db.delete(my_comment)
 
         self.redirect("/blog/" + blog_id)
+
 
 class LikeComment(Handler):
     """Handler for liking comment"""
@@ -268,6 +285,7 @@ class LikeComment(Handler):
             my_comment.put()
 
             self.redirect("/blog/" + blog_id)
+
 
 class Signup(Handler):
     """Sign up page"""
@@ -313,6 +331,7 @@ class Signup(Handler):
                         verify_error=verify_error,
                         email_error=email_error)
 
+
 class Login(Handler):
     """Login page"""
     def get(self):
@@ -336,12 +355,14 @@ class Login(Handler):
             username_error = "User does not exist"
             self.render("user-login.html", username_error=username_error)
 
+
 class Logout(Handler):
     """Logout Handler"""
     def get(self):
         if get_user(self):
             self.logout()
         self.redirect('/blog/login')
+
 
 class Welcome(Handler):
     """Welcome page"""
@@ -352,6 +373,7 @@ class Welcome(Handler):
         else:
             self.redirect('/blog/signup')
 
+
 class Blogpost(db.Model):
     """Blogpost model"""
     subject = db.StringProperty(required=True)
@@ -360,6 +382,7 @@ class Blogpost(db.Model):
     writer = db.StringProperty(required=True)
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
+
 
 class Comment(db.Model):
     """Comment model"""
@@ -370,9 +393,11 @@ class Comment(db.Model):
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
 
+
 # User stuff
 def make_salt():
     return ''.join(random.choice(string.letters) for x in xrange(5))
+
 
 def make_pw_hash(name, pw, salt=None):
     if not salt:
@@ -380,9 +405,11 @@ def make_pw_hash(name, pw, salt=None):
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return salt + ',' + h
 
+
 def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
+
 
 class User(db.Model):
     name = db.StringProperty(required=True)
@@ -406,6 +433,7 @@ class User(db.Model):
     @classmethod
     def login(cls, name, pw): # TODO
         pass
+
 
 # clear_database()
 
