@@ -12,7 +12,7 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
 
 def clear_database():
-    """ 
+    """
     Clear database of posts,
     users, and comments.
     """
@@ -45,6 +45,7 @@ secret = "Tabs>Spaces"
 
 # Security functions
 def make_secure_val(val):
+    """Make secure hash"""
     return '%s|%s' % (val, hashlib.sha256(secret + val).hexdigest())
 
 def check_secure_val(secure_val):
@@ -54,6 +55,7 @@ def check_secure_val(secure_val):
             return val
 
 def get_user(self):
+    """Get current user by cookie"""
     user_cookie = self.request.cookies.get("user_id")
     if check_secure_val(user_cookie):
         user_id = user_cookie.split('|')[0]
@@ -61,14 +63,11 @@ def get_user(self):
         return user
 
 def get_username(self):
-    user_cookie = self.request.cookies.get("user_id")
-    if check_secure_val(user_cookie):
-        user_id = user_cookie.split('|')[0]
-        user = User.by_id(int(user_id))
-        return user.name
+    """Get current username by cookie"""
+    get_user(self).name
 
-# Base Handler class
 class Handler(webapp2.RequestHandler):
+    """Base Handler class"""
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
@@ -95,8 +94,8 @@ class Handler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-# Main page
 class MainPage(Handler):
+    """Main page"""
     def get(self):
         blog_posts = db.GqlQuery("SELECT * FROM Blogpost ORDER BY created DESC")
 
@@ -106,8 +105,8 @@ class MainPage(Handler):
 
         self.render("mainpage.html", blog_posts=blog_posts, logged_in=logged_in)
 
-# New posts
 class NewPost(Handler):
+    """New post page"""
     def get(self):
         self.render("newpost.html")
 
@@ -127,8 +126,8 @@ class NewPost(Handler):
         else:
             self.redirect("/blog/login")
 
-# For editing posts
 class EditPost(Handler):
+    """Edit post page"""
     def get(self, blog_id):
         my_blog = Blogpost.get_by_id(int(blog_id))
 
@@ -156,8 +155,11 @@ class EditPost(Handler):
         else:
             self.redirect("/blog/login")
 
-# Permalink to blog posts
 class Permalink(Handler):
+    """
+    Permalink page for each
+    individual post
+    """
     def get(self, blog_id):
         my_blog = Blogpost.get_by_id(int(blog_id))
         if my_blog:
@@ -173,7 +175,10 @@ class Permalink(Handler):
         if comment_text:
             username = get_username(self)
             if username:
-                comment = Comment(writer=username, comment=comment_text, post=my_blog, likes=0, likers=[])
+                comment = Comment(writer=username,
+                                  comment=comment_text,
+                                  post=my_blog, likes=0,
+                                  likers=[])
                 comment.put()
             else:
                 self.redirect("/blog/login")
@@ -182,8 +187,8 @@ class Permalink(Handler):
 
         self.render("permalink.html", post=my_blog, my_comments=my_comments)
 
-# For liking posts
 class LikePost(Handler):
+    """Handler for liking posts"""
     def get(self, blog_id):
         my_blog = Blogpost.get_by_id(int(blog_id))
 
@@ -201,9 +206,8 @@ class LikePost(Handler):
             self.redirect("/blog/" + blog_id)
 
 
-
-# For deleting posts
 class DeletePost(Handler):
+    """Handler for deleting posts"""
     def get(self, blog_id):
         my_blog = Blogpost.get_by_id(int(blog_id))
         username = get_username(self)
@@ -225,6 +229,7 @@ class DeletePost(Handler):
 # Deleting/Editing/Liking comments
 
 class EditComment(Handler):
+    """Edit comment page"""
     def get(self, blog_id, comment_id):
         my_comment = Comment.get_by_id(int(comment_id))
         my_blog = Blogpost.get_by_id(int(blog_id))
@@ -243,6 +248,7 @@ class EditComment(Handler):
         self.redirect("/blog/" + blog_id)
 
 class DeleteComment(Handler):
+    """Handler for deleting comment"""
     def get(self, blog_id, comment_id):
         my_comment = Comment.get_by_id(int(comment_id))
         if my_comment.writer == get_username(self):
@@ -251,6 +257,7 @@ class DeleteComment(Handler):
         self.redirect("/blog/" + blog_id)
 
 class LikeComment(Handler):
+    """Handler for liking comment"""
     def get(self, blog_id, comment_id):
         my_comment = Comment.get_by_id(int(comment_id))
 
@@ -262,8 +269,8 @@ class LikeComment(Handler):
 
             self.redirect("/blog/" + blog_id)
 
-# Signup page
 class Signup(Handler):
+    """Sign up page"""
     def get(self):
         self.render("user-signup.html")
 
@@ -273,7 +280,8 @@ class Signup(Handler):
         self.verify = self.request.get("verify")
         self.email = self.request.get("email")
 
-        if valid_username(self.username) and valid_password(self.password) and valid_email(self.email) and self.password == self.verify:
+        if (valid_username(self.username) and valid_password(self.password) and
+                valid_email(self.email) and self.password == self.verify):
             user = User.by_name(self.username)
             if user:
                 username_error = "User already exists"
@@ -305,8 +313,8 @@ class Signup(Handler):
                         verify_error=verify_error,
                         email_error=email_error)
 
-# Login page
 class Login(Handler):
+    """Login page"""
     def get(self):
         self.render("user-login.html")
     def post(self):
@@ -328,15 +336,15 @@ class Login(Handler):
             username_error = "User does not exist"
             self.render("user-login.html", username_error=username_error)
 
-# Logout
 class Logout(Handler):
+    """Logout Handler"""
     def get(self):
         if get_user(self):
             self.logout()
         self.redirect('/blog/login')
 
-# Welcome page
 class Welcome(Handler):
+    """Welcome page"""
     def get(self):
         username = get_username(self)
         if username:
@@ -344,8 +352,8 @@ class Welcome(Handler):
         else:
             self.redirect('/blog/signup')
 
-# Blogpost model
 class Blogpost(db.Model):
+    """Blogpost model"""
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -353,8 +361,8 @@ class Blogpost(db.Model):
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
 
-# Comment model
 class Comment(db.Model):
+    """Comment model"""
     writer = db.StringProperty(required=True)
     comment = db.TextProperty(required=True)
     post = db.ReferenceProperty(Blogpost, collection_name='post_comments')
