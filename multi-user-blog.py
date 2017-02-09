@@ -213,13 +213,13 @@ class LikePost(Handler):
             my_blog.likes += 1
             my_blog.likers.append(user.name)
             my_blog.put()
-            self.redirect("/blog/" + blog_id)
+            self.redirect("/blog/%s" % blog_id)
 
         elif not user:
             self.redirect("/blog/login")
 
         else:
-            self.redirect("/blog/" + blog_id)
+            self.redirect("/blog/%s" % blog_id)
 
 
 
@@ -239,7 +239,7 @@ class DeletePost(Handler):
             self.redirect("/blog/login")
 
         else:
-            self.redirect("/blog/" + blog_id)
+            self.redirect("/blog/%s" % blog_id)
 
 
 # Deleting/Editing/Liking comments
@@ -252,7 +252,7 @@ class EditComment(Handler):
         if my_comment.writer == get_username(self):
             self.render("editcomment.html", post=my_blog, comment=my_comment)
         else:
-            self.redirect("/blog/" + blog_id)
+            self.redirect("/blog/%s" % blog_id)
 
     def post(self, blog_id, comment_id):
         my_comment = Comment.get_by_id(int(comment_id))
@@ -260,7 +260,7 @@ class EditComment(Handler):
         my_comment.comment = new_comment
         my_comment.put()
 
-        self.redirect("/blog/" + blog_id)
+        self.redirect("/blog/%s" % blog_id)
 
 
 class DeleteComment(Handler):
@@ -270,7 +270,7 @@ class DeleteComment(Handler):
         if my_comment.writer == get_username(self):
             db.delete(my_comment)
 
-        self.redirect("/blog/" + blog_id)
+        self.redirect("/blog/%s" % blog_id)
 
 
 class LikeComment(Handler):
@@ -284,7 +284,7 @@ class LikeComment(Handler):
             my_comment.likers.append(user.name)
             my_comment.put()
 
-            self.redirect("/blog/" + blog_id)
+            self.redirect("/blog/%s" % blog_id)
 
 
 class Signup(Handler):
