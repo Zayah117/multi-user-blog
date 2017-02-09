@@ -74,7 +74,7 @@ def get_user(self):
 
 def get_username(self):
     """Get current username by cookie"""
-    get_user(self).name
+    return get_user(self).name
 
 
 class Handler(webapp2.RequestHandler):
