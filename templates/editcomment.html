@@ -1,21 +1,15 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-	<head>
-		<title>Basic Blog</title>
-	</head>
+{% block content %}
+<div>
+	<form method="post">
+		<label>
+			<div>Add comment</div>
+			<textarea name="comment">{{comment.comment}}</textarea>
+		</label>
 
-	<body>
-		<h1>My Blog</h1>
-
-		<form method="post">
-			<label>
-				<div>Add comment</div>
-				<textarea name="comment">{{comment.comment}}</textarea>
-			</label>
-
-			<input type="submit">
-		</form>
-		<a href="/blog/{{ post.key().id() }}">Cancel</a>
-	</body>
-</html>
+		<input type="submit">
+	</form>
+	<a href="/blog/{{ post.key().id() }}">Cancel</a>
+</div>
+{% endblock %}

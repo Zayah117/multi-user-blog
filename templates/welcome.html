@@ -1,13 +1,8 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-
-<html>
-  <head>
-    <title>Unit 2 Signup</title>
-  </head>
-
-  <body>
-    <h2>Welcome, {{ username }}!</h2>
-    <a href="/blog">Mainpage</a>
-  </body>
-</html>
+{% block content %}
+<div>
+	<h2>Welcome, {{ username }}!</h2>
+	<a href="/blog">Mainpage</a>
+</div>
+{% endblock %}

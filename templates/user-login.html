@@ -1,49 +1,38 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
+{% block content %}
+<div>
+	<h2>Login</h2>
+	<form method="post">
+		<table>
+			<tr>
+				<td class="label">
+					Username
+				</td>
+				<td>
+					<input type="text" name="username" value="{{ username }}">
+				</td>
+				<td class="error">
+					{{ username_error }}
+				</td>
+			</tr>
 
-<html>
-  <head>
-    <title>Sign Up</title>
-    <style type="text/css">
-      .label {text-align: right}
-      .error {color: red}
-    </style>
+			<tr>
+				<td class="label">
+					Password
+				</td>
+				<td>
+					<input type="password" name="password" value="">
+				</td>
+				<td class="error">
+					{{ password_error }}
+				</td>
+			</tr>
+		</table>
 
-  </head>
-
-  <body>
-    <h2>Login</h2>
-    <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="{{ username }}">
-          </td>
-          <td class="error">
-            {{ username_error }}
-          </td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">
-            {{ password_error }}
-          </td>
-        </tr>
-      </table>
-
-      <input type="submit">
-    </form>
-    <a href="/blog/signup">Signup</a>
-    <a href="/blog">Mainpage</a>
-  </body>
-
-</html>
+		<input type="submit">
+	</form>
+	<a href="/blog/signup">Signup</a>
+	<a href="/blog">Mainpage</a>	
+</div>
+{% endblock %}

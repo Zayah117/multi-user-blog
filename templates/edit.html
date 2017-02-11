@@ -1,35 +1,22 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-	<head>
-		<title>Basic Blog</title>
-	</head>
+{% block content %}
+<div>
+	<form method="post">
+		<label>
+			<div>Subject</div>
+			<input type="text" name="subject" value="{{post.subject}}">
+		</label>
 
-	<style>
-		textarea {
-			width: 600px;
-			height: 400px;
-		}
-	</style>
+		<label>
+			<div>Content</div>
+			<textarea name="content">{{post.content}}</textarea>
+		</label>
 
-	<body>
-		<h1>My Blog</h1>
+		<div class="error">{{error}}</div>
 
-		<form method="post">
-			<label>
-				<div>Subject</div>
-				<input type="text" name="subject" value="{{post.subject}}">
-			</label>
-
-			<label>
-				<div>Content</div>
-				<textarea name="content">{{post.content}}</textarea>
-			</label>
-
-			<div class="error">{{error}}</div>
-
-			<input type="submit">
-		</form>
-		<a href="/blog/{{ post.key().id() }}">Cancel</a>
-	</body>
-</html>
+		<input type="submit">
+	</form>
+	<a href="/blog/{{ post.key().id() }}">Cancel</a>
+</div>
+{% endblock %}

@@ -1,35 +1,21 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-	<head>
-		<title>Basic Blog</title>
-	</head>
+{% block content %}
+<div>
+	<a href="/blog/newpost">Newpost</a>
+	{% if logged_in %}
+		<a href="/blog/logout">Logout</a>
+	{% else %}
+		<a href="/blog/login">Login</a>
+		<a href="/blog/signup">Signup</a>
+	{% endif %}
 
-	<style>
-		.blog_post {
-			padding: 10px;
-		}
-	</style>
-
-	<body>
-		<h1>My Blog</h1>
-
-		<hr>
-
-		<a href="/blog/newpost">Newpost</a>
-		{% if logged_in %}
-			<a href="/blog/logout">Logout</a>
-		{% else %}
-			<a href="/blog/login">Login</a>
-			<a href="/blog/signup">Signup</a>
-		{% endif %}
-
-		{% for post in blog_posts %}
-			<div class="blog_post">
-				<div><a href="/blog/{{ post.key().id() }}">{{post.subject}}</a></div>
-				<div>Submitted by {{post.writer}}</div>
-				<div>Likes: {{post.likes}}</div>
-			</div>
-		{% endfor %}
-	</body>
-</html>
+	{% for post in blog_posts %}
+		<div class="blog_post">
+			<div><a href="/blog/{{ post.key().id() }}">{{post.subject}}</a></div>
+			<div>Submitted by {{post.writer}}</div>
+			<div>Likes: {{post.likes}}</div>
+		</div>
+	{% endfor %}	
+</div>
+{% endblock %}
