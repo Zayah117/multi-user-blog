@@ -13,8 +13,8 @@ import webapp2
 from google.appengine.ext import db
 
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
+JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR), autoescape=True)
 
 
 def clear_database():
@@ -52,13 +52,13 @@ def valid_email(email):
         return EMAIL_RE.match(email)
 
 
-secret = "Tabs>Spaces"
+SECRET = "Tabs>Spaces"
 
 
 # Security functions
 def make_secure_val(val):
     """Make secure hash"""
-    return '%s|%s' % (val, hashlib.sha256(secret + val).hexdigest())
+    return '%s|%s' % (val, hashlib.sha256(SECRET + val).hexdigest())
 
 
 def check_secure_val(secure_val):
@@ -88,8 +88,8 @@ class Handler(webapp2.RequestHandler):
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
-        t = jinja_env.get_template(template)
-        return t.render(params)
+        my_template = JINJA_ENV.get_template(template)
+        return my_template.render(params)
 
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
