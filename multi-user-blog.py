@@ -188,9 +188,9 @@ class Permalink(Handler):
         my_blog = Blogpost.get_by_id(int(blog_id))
         comment_text = self.request.get("comment")
         if comment_text:
-            username = get_username(self)
-            if username:
-                comment = Comment(writer=username,
+            user = get_user(self)
+            if user:
+                comment = Comment(writer=user.name,
                                   comment=comment_text,
                                   post=my_blog, likes=0,
                                   likers=[])
