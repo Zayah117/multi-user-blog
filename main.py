@@ -1,3 +1,8 @@
+"""
+Main file for multi user blog project.
+Created by Isaiah Baker: https://github.com/Zayah117
+"""
+
 import os
 import re
 import random
