@@ -38,14 +38,17 @@ EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
 
 def valid_username(username):
+    """Return true if username is valid"""
     return USER_RE.match(username)
 
 
 def valid_password(password):
+    """Return true if password is valid"""
     return PASS_RE.match(password)
 
 
 def valid_email(email):
+    """Return true if email is valid"""
     if email == "":
         return True
     else:
@@ -62,6 +65,7 @@ def make_secure_val(val):
 
 
 def check_secure_val(secure_val):
+    """Check if value is secure"""
     if secure_val:
         val = secure_val.split('|')[0]
         if secure_val == make_secure_val(val):
@@ -84,36 +88,49 @@ def get_username(self):
 
 class Handler(webapp2.RequestHandler):
     """Base Handler class"""
+
     def write(self, *a, **kw):
+        """Write to webpage"""
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
+        """Render string"""
         my_template = JINJA_ENV.get_template(template)
         return my_template.render(params)
 
     def render(self, template, **kw):
+        """Render html page"""
         self.write(self.render_str(template, **kw))
 
-    # Extra functions
     def set_secure_cookie(self, name, val):
+        """Make a secure cookie"""
         cookie_val = make_secure_val(val)
         self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name, cookie_val))
 
     def read_secure_cookie(self, name):
+        """
+        Get cookie val and return it if
+        it's secure.
+        """
         cookie_val = self.request.cookies.get(name)
-        # return cookie_val if it's secure
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
+        """Set cookie when user logs in"""
         self.set_secure_cookie('user_id', str(user.key().id()))
 
     def logout(self):
+        """Remove cookie when user logs out"""
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
 
 class MainPage(Handler):
     """Main page"""
     def get(self):
+        """
+        Get blog posts and render
+        them on the main page
+        """
         blog_posts = db.GqlQuery("SELECT * FROM Blogpost ORDER BY created DESC")
 
         logged_in = False
@@ -126,9 +143,14 @@ class MainPage(Handler):
 class NewPost(Handler):
     """New post page"""
     def get(self):
+        """Render new posts page"""
         self.render("newpost.html")
 
     def post(self):
+        """
+        Add new post to database if
+        user is valid.
+        """
         username = get_username(self)
         if username:
             subject = self.request.get("subject")
@@ -148,6 +170,10 @@ class NewPost(Handler):
 class EditPost(Handler):
     """Edit post page"""
     def get(self, blog_id):
+        """
+        Render edit page if
+        user is valid.
+        """
         my_blog = Blogpost.get_by_id(int(blog_id))
 
         username = get_username(self)
@@ -159,6 +185,10 @@ class EditPost(Handler):
             self.redirect("/blog/%s" % blog_id)
 
     def post(self, blog_id):
+        """
+        Modify post and add it to
+        database if user is valid.
+        """
         my_blog = Blogpost.get_by_id(int(blog_id))
 
         username = get_username(self)
@@ -181,6 +211,7 @@ class Permalink(Handler):
     individual post
     """
     def get(self, blog_id):
+        """Render permalink page"""
         my_blog = Blogpost.get_by_id(int(blog_id))
         if my_blog:
             my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
@@ -188,8 +219,12 @@ class Permalink(Handler):
         else:
             self.response.out.write("Ooops! Page does not exist!")
 
-    # For commenting on posts
     def post(self, blog_id):
+        """
+        For commenting on posts.
+        Add comment to database if user
+        is valid.
+        """
         my_blog = Blogpost.get_by_id(int(blog_id))
         comment_text = self.request.get("comment")
         if comment_text:
@@ -211,6 +246,10 @@ class Permalink(Handler):
 class LikePost(Handler):
     """Handler for liking posts"""
     def get(self, blog_id):
+        """
+        Add like to current blog then 
+        redirect back to previous page.
+        """
         my_blog = Blogpost.get_by_id(int(blog_id))
 
         user = get_user(self)
@@ -227,10 +266,13 @@ class LikePost(Handler):
             self.redirect("/blog/%s" % blog_id)
 
 
-
 class DeletePost(Handler):
     """Handler for deleting posts"""
     def get(self, blog_id):
+        """
+        Delete post then redirect back
+        to previous page.
+        """
         my_blog = Blogpost.get_by_id(int(blog_id))
         username = get_username(self)
 
@@ -247,10 +289,10 @@ class DeletePost(Handler):
             self.redirect("/blog/%s" % blog_id)
 
 
-# Deleting/Editing/Liking comments
 class EditComment(Handler):
     """Edit comment page"""
     def get(self, blog_id, comment_id):
+        """Render edit comment page"""
         my_comment = Comment.get_by_id(int(comment_id))
         my_blog = Blogpost.get_by_id(int(blog_id))
 
@@ -260,6 +302,7 @@ class EditComment(Handler):
             self.redirect("/blog/%s" % blog_id)
 
     def post(self, blog_id, comment_id):
+        """Modify comment and add it to database"""
         my_comment = Comment.get_by_id(int(comment_id))
         new_comment = self.request.get("comment")
         my_comment.comment = new_comment
@@ -271,6 +314,10 @@ class EditComment(Handler):
 class DeleteComment(Handler):
     """Handler for deleting comment"""
     def get(self, blog_id, comment_id):
+        """
+        Delete comment and redirect
+        back to previous page.
+        """
         my_comment = Comment.get_by_id(int(comment_id))
         if my_comment.writer == get_username(self):
             db.delete(my_comment)
@@ -281,6 +328,10 @@ class DeleteComment(Handler):
 class LikeComment(Handler):
     """Handler for liking comment"""
     def get(self, blog_id, comment_id):
+        """
+        Like comment and redirect
+        back to previous page.
+        """
         my_comment = Comment.get_by_id(int(comment_id))
 
         user = get_user(self)
@@ -295,9 +346,14 @@ class LikeComment(Handler):
 class Signup(Handler):
     """Sign up page"""
     def get(self):
+        """Render signup page"""
         self.render("user-signup.html")
 
     def post(self):
+        """
+        Add all info to database as a new user
+        if information is valid.
+        """
         self.username = self.request.get("username")
         self.password = self.request.get("password")
         self.verify = self.request.get("verify")
@@ -340,8 +396,10 @@ class Signup(Handler):
 class Login(Handler):
     """Login page"""
     def get(self):
+        """Render login page"""
         self.render("user-login.html")
     def post(self):
+        """Log user in if info is valid"""
         self.username = self.request.get("username")
         self.password = self.request.get("password")
 
@@ -364,6 +422,7 @@ class Login(Handler):
 class Logout(Handler):
     """Logout Handler"""
     def get(self):
+        """Log out and redirect to login page"""
         if get_user(self):
             self.logout()
         self.redirect('/blog/login')
@@ -372,6 +431,7 @@ class Logout(Handler):
 class Welcome(Handler):
     """Welcome page"""
     def get(self):
+        """Render welcome page"""
         username = get_username(self)
         if username:
             self.render('welcome.html', username=username)
@@ -401,10 +461,18 @@ class Comment(db.Model):
 
 # User stuff
 def make_salt():
+    """
+    Return and string of random 
+    letters to use as salt.
+    """
     return ''.join(random.choice(string.letters) for x in xrange(5))
 
 
 def make_pw_hash(name, pw, salt=None):
+    """
+    Make password hash with 
+    username, password, and salt.
+    """
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
@@ -412,32 +480,39 @@ def make_pw_hash(name, pw, salt=None):
 
 
 def valid_pw(name, password, h):
+    """Return true if password is valid"""
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
 
 
 class User(db.Model):
+    """User model"""
     name = db.StringProperty(required=True)
     pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
+        """Get user by id"""
         return User.get_by_id(uid)
 
     @classmethod
     def by_name(cls, name):
+        """Get user by name"""
         user = User.all().filter('name = ', name).get()
         return user
 
     @classmethod
     def register(cls, name, pw, email=None):
+        """Register user"""
         pw_hash = make_pw_hash(name, pw)
         return User(name=name, pw_hash=pw_hash, email=email)
 
+    """
     @classmethod
     def login(cls, name, pw): # TODO
         pass
+    """
 
 
 # clear_database()
