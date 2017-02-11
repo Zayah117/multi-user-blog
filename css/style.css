@@ -1,6 +1,19 @@
-.label {
-	text-align: right;
+p {
+	margin: 0;
 }
+
+.post {
+	padding: 10px;
+}
+
+.content {
+	padding-bottom: 20px;
+}
+
+.comment {
+	padding: 10px;
+}
+
 .error {
 	color: red;
 }
