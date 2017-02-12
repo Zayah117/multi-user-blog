@@ -174,7 +174,7 @@ class EditPost(Handler):
         Render edit page if
         user is valid.
         """
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
 
         username = get_username(self)
         if username == my_blog.writer:
@@ -189,7 +189,7 @@ class EditPost(Handler):
         Modify post and add it to
         database if user is valid.
         """
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
 
         username = get_username(self)
         if username and username == my_blog.writer:
@@ -212,7 +212,7 @@ class Permalink(Handler):
     """
     def get(self, blog_id):
         """Render permalink page"""
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
         if my_blog:
             my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
             self.render("permalink.html", post=my_blog, my_comments=my_comments)
@@ -225,7 +225,7 @@ class Permalink(Handler):
         Add comment to database if user
         is valid.
         """
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
         comment_text = self.request.get("comment")
         if comment_text:
             user = get_user(self)
@@ -247,10 +247,10 @@ class LikePost(Handler):
     """Handler for liking posts"""
     def get(self, blog_id):
         """
-        Add like to current blog then 
+        Add like to current blog then
         redirect back to previous page.
         """
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
 
         user = get_user(self)
         if user and user.name not in my_blog.likers and user.name != my_blog.writer:
@@ -273,7 +273,7 @@ class DeletePost(Handler):
         Delete post then redirect back
         to previous page.
         """
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_blog = Blogpost.by_id(int(blog_id))
         username = get_username(self)
 
         if username and username == my_blog.writer:
@@ -293,8 +293,8 @@ class EditComment(Handler):
     """Edit comment page"""
     def get(self, blog_id, comment_id):
         """Render edit comment page"""
-        my_comment = Comment.get_by_id(int(comment_id))
-        my_blog = Blogpost.get_by_id(int(blog_id))
+        my_comment = Comment.by_id(int(comment_id))
+        my_blog = Blogpost.by_id(int(blog_id))
 
         if my_comment.writer == get_username(self):
             self.render("editcomment.html", post=my_blog, comment=my_comment)
@@ -303,7 +303,7 @@ class EditComment(Handler):
 
     def post(self, blog_id, comment_id):
         """Modify comment and add it to database"""
-        my_comment = Comment.get_by_id(int(comment_id))
+        my_comment = Comment.by_id(int(comment_id))
         new_comment = self.request.get("comment")
         my_comment.comment = new_comment
         my_comment.put()
@@ -318,7 +318,7 @@ class DeleteComment(Handler):
         Delete comment and redirect
         back to previous page.
         """
-        my_comment = Comment.get_by_id(int(comment_id))
+        my_comment = Comment.by_id(int(comment_id))
         if my_comment.writer == get_username(self):
             db.delete(my_comment)
 
@@ -332,7 +332,7 @@ class LikeComment(Handler):
         Like comment and redirect
         back to previous page.
         """
-        my_comment = Comment.get_by_id(int(comment_id))
+        my_comment = Comment.by_id(int(comment_id))
 
         user = get_user(self)
         if user and user.name not in my_comment.likers and user.name != my_comment.writer:
@@ -448,6 +448,11 @@ class Blogpost(db.Model):
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
 
+    @classmethod
+    def by_id(cls, uid):
+        """Get blogpost by id"""
+        return Blogpost.get_by_id(uid)
+
 
 class Comment(db.Model):
     """Comment model"""
@@ -458,31 +463,36 @@ class Comment(db.Model):
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
 
+    @classmethod
+    def by_id(cls, uid):
+        """Get comment by id"""
+        return Comment.get_by_id(uid)
+
 
 # User stuff
 def make_salt():
     """
-    Return and string of random 
+    Return and string of random
     letters to use as salt.
     """
     return ''.join(random.choice(string.letters) for x in xrange(5))
 
 
-def make_pw_hash(name, pw, salt=None):
+def make_pw_hash(name, password, salt=None):
     """
-    Make password hash with 
+    Make password hash with
     username, password, and salt.
     """
     if not salt:
         salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return salt + ',' + h
+    my_hash = hashlib.sha256(name + password + salt).hexdigest()
+    return salt + ',' + my_hash
 
 
-def valid_pw(name, password, h):
+def valid_pw(name, password, my_hash):
     """Return true if password is valid"""
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
+    salt = my_hash.split(',')[0]
+    return my_hash == make_pw_hash(name, password, salt)
 
 
 class User(db.Model):
@@ -503,16 +513,10 @@ class User(db.Model):
         return user
 
     @classmethod
-    def register(cls, name, pw, email=None):
+    def register(cls, name, password, email=None):
         """Register user"""
-        pw_hash = make_pw_hash(name, pw)
+        pw_hash = make_pw_hash(name, password)
         return User(name=name, pw_hash=pw_hash, email=email)
-
-    """
-    @classmethod
-    def login(cls, name, pw): # TODO
-        pass
-    """
 
 
 # clear_database()
