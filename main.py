@@ -81,11 +81,6 @@ def get_user(self):
         return user
 
 
-def get_username(self):
-    """Get current username by cookie"""
-    return get_user(self).name
-
-
 class Handler(webapp2.RequestHandler):
     """Base Handler class"""
 
@@ -151,11 +146,11 @@ class NewPost(Handler):
         Add new post to database if
         user is valid.
         """
-        username = get_username(self)
-        if username:
+        user = get_user(self)
+        if user:
             subject = self.request.get("subject")
             content = self.request.get("content")
-            writer = username
+            writer = user.name
             if subject and content:
                 post = Blogpost(subject=subject, content=content, writer=writer, likes=0, likers=[])
                 post.put()
@@ -176,10 +171,10 @@ class EditPost(Handler):
         """
         my_blog = Blogpost.by_id(int(blog_id))
 
-        username = get_username(self)
-        if username == my_blog.writer:
+        user = get_user(self)
+        if user and user.name == my_blog.writer:
             self.render("edit.html", post=my_blog)
-        elif not username:
+        elif not user:
             self.redirect("/blog/login")
         else:
             self.redirect("/blog/%s" % blog_id)
@@ -191,8 +186,8 @@ class EditPost(Handler):
         """
         my_blog = Blogpost.by_id(int(blog_id))
 
-        username = get_username(self)
-        if username and username == my_blog.writer:
+        user = get_user(self)
+        if user and user.name == my_blog.writer:
             new_subject = self.request.get("subject")
             new_content = self.request.get("content")
 
@@ -274,15 +269,15 @@ class DeletePost(Handler):
         to previous page.
         """
         my_blog = Blogpost.by_id(int(blog_id))
-        username = get_username(self)
+        user = get_user(self)
 
-        if username and username == my_blog.writer:
+        if user and user.name == my_blog.writer:
             my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
             db.delete(my_blog)
             db.delete(my_comments)
             self.redirect("/blog")
 
-        elif not username:
+        elif not user:
             self.redirect("/blog/login")
 
         else:
@@ -296,7 +291,8 @@ class EditComment(Handler):
         my_comment = Comment.by_id(int(comment_id))
         my_blog = Blogpost.by_id(int(blog_id))
 
-        if my_comment.writer == get_username(self):
+        user = get_user(self)
+        if user and my_comment.writer == user.name:
             self.render("editcomment.html", post=my_blog, comment=my_comment)
         else:
             self.redirect("/blog/%s" % blog_id)
@@ -319,7 +315,8 @@ class DeleteComment(Handler):
         back to previous page.
         """
         my_comment = Comment.by_id(int(comment_id))
-        if my_comment.writer == get_username(self):
+        user = get_user(self)
+        if user and my_comment.writer == user.name:
             db.delete(my_comment)
 
         self.redirect("/blog/%s" % blog_id)
@@ -340,7 +337,7 @@ class LikeComment(Handler):
             my_comment.likers.append(user.name)
             my_comment.put()
 
-            self.redirect("/blog/%s" % blog_id)
+        self.redirect("/blog/%s" % blog_id)
 
 
 class Signup(Handler):
@@ -432,9 +429,9 @@ class Welcome(Handler):
     """Welcome page"""
     def get(self):
         """Render welcome page"""
-        username = get_username(self)
-        if username:
-            self.render('welcome.html', username=username)
+        user = get_user(self)
+        if user:
+            self.render('welcome.html', username=user.name)
         else:
             self.redirect('/blog/signup')
 
