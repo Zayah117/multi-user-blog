@@ -290,12 +290,15 @@ class EditComment(Handler):
         """Render edit comment page"""
         my_comment = Comment.by_id(int(comment_id))
         my_blog = Blogpost.by_id(int(blog_id))
-
         user = get_user(self)
+
         if user and my_comment.writer == user.name:
             self.render("editcomment.html", post=my_blog, comment=my_comment)
+        elif not user:
+            self.redirect("/blog/login")
         else:
             self.redirect("/blog/%s" % blog_id)
+
 
     def post(self, blog_id, comment_id):
         """Modify comment and add it to database"""
@@ -318,8 +321,11 @@ class DeleteComment(Handler):
         user = get_user(self)
         if user and my_comment.writer == user.name:
             db.delete(my_comment)
-
-        self.redirect("/blog/%s" % blog_id)
+            self.redirect("/blog/%s" % blog_id)
+        elif not user:
+            self.redirect("/blog/login")
+        else:
+            self.redirect("/blog/%s" % blog_id)
 
 
 class LikeComment(Handler):
@@ -336,8 +342,11 @@ class LikeComment(Handler):
             my_comment.likes += 1
             my_comment.likers.append(user.name)
             my_comment.put()
-
-        self.redirect("/blog/%s" % blog_id)
+            self.redirect("/blog/%s" % blog_id)
+        elif not user:
+            self.redirect("/blog/login")
+        else:
+            self.redirect("/blog/%s" % blog_id)
 
 
 class Signup(Handler):
