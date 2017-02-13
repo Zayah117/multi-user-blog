@@ -49,19 +49,20 @@ def valid_password(password):
 def valid_email(email):
     """Return true if email is valid"""
     EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-    
+
     if email == "":
         return True
     else:
         return EMAIL_RE.match(email)
 
 
-SECRET = "Tabs>Spaces"
-
-
 # Security functions
 def make_secure_val(val):
     """Make secure hash"""
+    secret_file = open("secret.txt", "r")
+    SECRET = secret_file.read()
+    secret_file.close()
+
     return '%s|%s' % (val, hashlib.sha256(SECRET + val).hexdigest())
 
 
