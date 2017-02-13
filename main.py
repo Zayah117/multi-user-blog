@@ -8,9 +8,9 @@ import re
 import random
 import string
 import hashlib
-import jinja2 # pylint: disable=import-error
-import webapp2 # pylint: disable=import-error
-from google.appengine.ext import db # pylint: disable=import-error
+import jinja2  # pylint: disable=import-error
+import webapp2  # pylint: disable=import-error
+from google.appengine.ext import db  # pylint: disable=import-error
 
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
