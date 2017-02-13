@@ -32,23 +32,24 @@ def clear_database():
 
 
 # Validating user inputs
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-PASS_RE = re.compile(r"^.{3,20}$")
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-
-
 def valid_username(username):
     """Return true if username is valid"""
+    USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+
     return USER_RE.match(username)
 
 
 def valid_password(password):
     """Return true if password is valid"""
+    PASS_RE = re.compile(r"^.{3,20}$")
+
     return PASS_RE.match(password)
 
 
 def valid_email(email):
     """Return true if email is valid"""
+    EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
+    
     if email == "":
         return True
     else:
