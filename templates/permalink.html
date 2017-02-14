@@ -5,7 +5,7 @@
 	<a href="/blog">Back</a>
 
 	<div class="post">
-		<h4>{{post.subject}} by {{post.writer}}</h4>
+		<h4>{{post.subject}} by {{post.writer.name}}</h4>
 		<div class="content">
 			<p>{{post.content}}</p>
 		</div>
@@ -27,7 +27,7 @@
 	</form>
 	{% for comment in my_comments %}
 		<div class="comment">
-			<div><b>{{comment.writer}}</b></div>
+			<div><b>{{comment.writer.name}}</b></div>
 			<div>{{comment.comment}}</div>
 			<div>Likes: {{comment.likes}}</div>
 			<div>

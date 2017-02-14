@@ -152,7 +152,7 @@ class NewPost(Handler):
         if user:
             subject = self.request.get("subject")
             content = self.request.get("content")
-            writer = user.name
+            writer = user
             if subject and content:
                 post = Blogpost(subject=subject, content=content, writer=writer, likes=0, likers=[])
                 post.put()
@@ -174,7 +174,7 @@ class EditPost(Handler):
         my_blog = Blogpost.by_id(int(blog_id))
 
         user = get_user(self)
-        if user and user.name == my_blog.writer:
+        if user and user.key() == my_blog.writer.key():
             self.render("edit.html", post=my_blog)
         elif not user:
             self.redirect("/blog/login")
@@ -189,7 +189,7 @@ class EditPost(Handler):
         my_blog = Blogpost.by_id(int(blog_id))
 
         user = get_user(self)
-        if user and user.name == my_blog.writer:
+        if user and user.key() == my_blog.writer.key():
             new_subject = self.request.get("subject")
             new_content = self.request.get("content")
 
@@ -227,7 +227,7 @@ class Permalink(Handler):
         if comment_text:
             user = get_user(self)
             if user:
-                comment = Comment(writer=user.name,
+                comment = Comment(writer=user,
                                   comment=comment_text,
                                   post=my_blog, likes=0,
                                   likers=[])
@@ -250,7 +250,7 @@ class LikePost(Handler):
         my_blog = Blogpost.by_id(int(blog_id))
 
         user = get_user(self)
-        if user and user.name not in my_blog.likers and user.name != my_blog.writer:
+        if user and user.name not in my_blog.likers and user.key() != my_blog.writer.key():
             my_blog.likes += 1
             my_blog.likers.append(user.name)
             my_blog.put()
@@ -273,7 +273,7 @@ class DeletePost(Handler):
         my_blog = Blogpost.by_id(int(blog_id))
         user = get_user(self)
 
-        if user and user.name == my_blog.writer:
+        if user and user.key() == my_blog.writer.key():
             my_comments = Comment.gql("WHERE post=:1 ORDER BY created ASC", my_blog)
             db.delete(my_blog)
             db.delete(my_comments)
@@ -294,7 +294,7 @@ class EditComment(Handler):
         my_blog = Blogpost.by_id(int(blog_id))
         user = get_user(self)
 
-        if user and my_comment.writer == user.name:
+        if user and my_comment.writer.key() == user.key():
             self.render("editcomment.html", post=my_blog, comment=my_comment)
         elif not user:
             self.redirect("/blog/login")
@@ -321,7 +321,7 @@ class DeleteComment(Handler):
         """
         my_comment = Comment.by_id(int(comment_id))
         user = get_user(self)
-        if user and my_comment.writer == user.name:
+        if user and my_comment.writer.key() == user.key():
             db.delete(my_comment)
             self.redirect("/blog/%s" % blog_id)
         elif not user:
@@ -340,7 +340,7 @@ class LikeComment(Handler):
         my_comment = Comment.by_id(int(comment_id))
 
         user = get_user(self)
-        if user and user.name not in my_comment.likers and user.name != my_comment.writer:
+        if user and user.name not in my_comment.likers and user.key() != my_comment.writer.key():
             my_comment.likes += 1
             my_comment.likers.append(user.name)
             my_comment.put()
@@ -447,12 +447,36 @@ class Welcome(Handler):
             self.redirect('/blog/signup')
 
 
+class User(db.Model):
+    """User model"""
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
+    email = db.StringProperty()
+
+    @classmethod
+    def by_id(cls, uid):
+        """Get user by id"""
+        return User.get_by_id(uid)
+
+    @classmethod
+    def by_name(cls, name):
+        """Get user by name"""
+        user = User.all().filter('name = ', name).get()
+        return user
+
+    @classmethod
+    def register(cls, name, password, email=None):
+        """Register user"""
+        pw_hash = make_pw_hash(name, password)
+        return User(name=name, pw_hash=pw_hash, email=email)
+
+
 class Blogpost(db.Model):
     """Blogpost model"""
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
-    writer = db.StringProperty(required=True)
+    writer = db.ReferenceProperty(User, required=True)
     likes = db.IntegerProperty(required=True)
     likers = db.StringListProperty(required=True)
 
@@ -464,7 +488,7 @@ class Blogpost(db.Model):
 
 class Comment(db.Model):
     """Comment model"""
-    writer = db.StringProperty(required=True)
+    writer = db.ReferenceProperty(User, required=True)
     comment = db.TextProperty(required=True)
     post = db.ReferenceProperty(Blogpost, collection_name='post_comments')
     created = db.DateTimeProperty(auto_now_add=True)
@@ -501,30 +525,6 @@ def valid_pw(name, password, my_hash):
     """Return true if password is valid"""
     salt = my_hash.split(',')[0]
     return my_hash == make_pw_hash(name, password, salt)
-
-
-class User(db.Model):
-    """User model"""
-    name = db.StringProperty(required=True)
-    pw_hash = db.StringProperty(required=True)
-    email = db.StringProperty()
-
-    @classmethod
-    def by_id(cls, uid):
-        """Get user by id"""
-        return User.get_by_id(uid)
-
-    @classmethod
-    def by_name(cls, name):
-        """Get user by name"""
-        user = User.all().filter('name = ', name).get()
-        return user
-
-    @classmethod
-    def register(cls, name, password, email=None):
-        """Register user"""
-        pw_hash = make_pw_hash(name, password)
-        return User(name=name, pw_hash=pw_hash, email=email)
 
 
 # clear_database()

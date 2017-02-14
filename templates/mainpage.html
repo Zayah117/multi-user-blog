@@ -13,7 +13,7 @@
 	{% for post in blog_posts %}
 		<div class="post">
 			<a href="/blog/{{ post.key().id() }}">{{post.subject}}</a>
-			<p>Submitted by {{post.writer}}</p>
+			<p>Submitted by {{post.writer.name}}</p>
 			<p>Likes: {{post.likes}}</p>
 		</div>
 	{% endfor %}	
